@@ -1,5 +1,18 @@
-node_modules
-dist
+# Python
+venv/
+backend/venv/
+__pycache__/
+*.pyc
+
+# Node
+node_modules/
+dist/
+
+# Env
 .env
-.vscode
+
+# Logs
 *.log
+
+# Editor
+.vscode

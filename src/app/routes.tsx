@@ -14,29 +14,13 @@ import { Notifications } from "./pages/Notifications";
 export const router = createBrowserRouter([
   {
     path: "/login",
-<<<<<<< HEAD
-    Component: Login,
-=======
     element: <Login />,
->>>>>>> 249f7611993147c13c081e1a5d0cf172b5d6e36a
   },
   {
     path: "/",
     element: <ProtectedRoute />,
     children: [
       {
-<<<<<<< HEAD
-        Component: Layout,
-        children: [
-          { index: true, Component: Dashboard },
-          { path: "profile", Component: Profile },
-          { path: "clubs", Component: Clubs },
-          { path: "clubs/:id", Component: ClubDetail },
-          { path: "events", Component: Events },
-          { path: "projects", Component: Projects },
-          { path: "study-groups", Component: StudyGroups },
-          { path: "notifications", Component: Notifications },
-=======
         element: <Layout />,
         children: [
           { index: true, element: <Dashboard /> },
@@ -47,7 +31,6 @@ export const router = createBrowserRouter([
           { path: "projects", element: <Projects /> },
           { path: "study-groups", element: <StudyGroups /> },
           { path: "notifications", element: <Notifications /> },
->>>>>>> 249f7611993147c13c081e1a5d0cf172b5d6e36a
         ],
       },
     ],

@@ -1,106 +1,97 @@
+import { useState, useEffect } from "react";
 import { Card } from "../components/Card";
 import { Button } from "../components/Button";
 import { Tag } from "../components/Tag";
-import { Bell, Briefcase, Calendar, MessageSquare, Users, CheckCheck } from "lucide-react";
-import { useState } from "react";
+import { Bell, Briefcase, Calendar, MessageSquare, Users, CheckCheck, Loader2 } from "lucide-react";
+import { apiFetch } from "../lib/api";
 
-type NotifType = "project" | "club" | "event" | "study" | "system";
+type NotifType = "project_application" | "project_application_result" | "project_team_join" |
+  "club_announcement" | "club_application_result" | "new_event" | "event_reminder" |
+  "study_file_upload" | "system";
 
 interface Notification {
-  id: number;
+  id: string;
   type: NotifType;
   title: string;
-  message: string;
-  time: string;
-  unread: boolean;
+  body: string;
+  link?: string;
+  is_read: boolean;
+  created_at: string;
 }
 
-const iconMap: Record<NotifType, React.ElementType> = {
-  project: Briefcase,
-  club: Users,
-  event: Calendar,
-  study: MessageSquare,
+const iconMap: Record<string, React.ElementType> = {
+  project_application: Briefcase,
+  project_application_result: Briefcase,
+  project_team_join: Briefcase,
+  club_announcement: Users,
+  club_application_result: Users,
+  new_event: Calendar,
+  event_reminder: Calendar,
+  study_file_upload: MessageSquare,
   system: Bell,
 };
 
-const colorMap: Record<NotifType, string> = {
-  project: "bg-blue-50 text-blue-600",
-  club: "bg-green-50 text-green-600",
-  event: "bg-orange-50 text-orange-600",
-  study: "bg-purple-50 text-purple-600",
+const colorMap: Record<string, string> = {
+  project_application: "bg-blue-50 text-blue-600",
+  project_application_result: "bg-blue-50 text-blue-600",
+  project_team_join: "bg-blue-50 text-blue-600",
+  club_announcement: "bg-green-50 text-green-600",
+  club_application_result: "bg-green-50 text-green-600",
+  new_event: "bg-orange-50 text-orange-600",
+  event_reminder: "bg-orange-50 text-orange-600",
+  study_file_upload: "bg-purple-50 text-purple-600",
   system: "bg-primary/10 text-primary",
 };
 
-const typeLabels: Record<NotifType, string> = {
-  project: "Project",
-  club: "Club",
-  event: "Event",
-  study: "Study",
-  system: "System",
-};
+function timeAgo(dateStr: string) {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const minutes = Math.floor(diff / 60000);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
+}
 
 export function Notifications() {
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "unread">("all");
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: 1, type: "project",
-      title: "New application to your project",
-      message: "Mehmet Aydın applied for the Frontend Developer role in CampusConnect.",
-      time: "2 hours ago", unread: true,
-    },
-    {
-      id: 2, type: "club",
-      title: "ACM Student Chapter — New Announcement",
-      message: "Hackathon ITU 2025 registration is now open! Limited spots available.",
-      time: "4 hours ago", unread: true,
-    },
-    {
-      id: 3, type: "event",
-      title: "Event Reminder — AI Research Seminar",
-      message: "The AI Research Seminar is tomorrow at 14:00 in EEB-2001.",
-      time: "6 hours ago", unread: true,
-    },
-    {
-      id: 4, type: "study",
-      title: "New file in Data Structures group",
-      message: "Ayşe Tuna uploaded \"Midterm Summary Notes.pdf\" to the group.",
-      time: "8 hours ago", unread: true,
-    },
-    {
-      id: 5, type: "project",
-      title: "Your application was accepted!",
-      message: "Congratulations! You have been accepted to SmartBudget AI as a Backend Developer.",
-      time: "Yesterday, 15:32", unread: false,
-    },
-    {
-      id: 6, type: "club",
-      title: "Web Dev Society — New Event",
-      message: "Monthly frontend challenge posted. Theme: 'Responsive Dashboard Design'.",
-      time: "Yesterday, 11:00", unread: false,
-    },
-    {
-      id: 7, type: "event",
-      title: "Career Fair 2025 — 1 Day Left",
-      message: "Don't forget! Career Fair is tomorrow at 10:00 in the Sports Hall.",
-      time: "2 days ago", unread: false,
-    },
-    {
-      id: 8, type: "system",
-      title: "Profile analysis complete",
-      message: "Your AI profile analysis is ready. Your profile is 78% complete.",
-      time: "3 days ago", unread: false,
-    },
-  ]);
 
-  const unreadCount = notifications.filter((n) => n.unread).length;
-  const filtered = filter === "unread" ? notifications.filter((n) => n.unread) : notifications;
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
 
-  function markAllRead() {
-    setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })));
+  async function fetchNotifications() {
+    try {
+      setIsLoading(true);
+      const data = await apiFetch("/api/notifications/");
+      setNotifications(data);
+    } catch {
+      console.error("Failed to load notifications");
+    } finally {
+      setIsLoading(false);
+    }
   }
 
-  function markRead(id: number) {
-    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, unread: false } : n)));
+  async function markRead(id: string) {
+    await apiFetch(`/api/notifications/${id}/read`, { method: "PATCH" });
+    setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, is_read: true } : n));
+  }
+
+  async function markAllRead() {
+    await apiFetch("/api/notifications/read-all", { method: "PATCH" });
+    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+  }
+
+  const unreadCount = notifications.filter((n) => !n.is_read).length;
+  const filtered = filter === "unread" ? notifications.filter((n) => !n.is_read) : notifications;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
   return (
@@ -136,29 +127,29 @@ export function Notifications() {
           </Card>
         )}
         {filtered.map((notif) => {
-          const Icon = iconMap[notif.type];
+          const Icon = iconMap[notif.type] || Bell;
           return (
             <Card
               key={notif.id}
-              className={`p-4 transition-all hover:shadow-md cursor-pointer ${notif.unread ? "border-primary/20 bg-accent" : ""}`}
-              onClick={() => markRead(notif.id)}
+              className={`p-4 transition-all hover:shadow-md cursor-pointer ${!notif.is_read ? "border-primary/20 bg-accent" : ""}`}
+              onClick={() => { if (!notif.is_read) markRead(notif.id); }}
             >
               <div className="flex items-start gap-4">
                 <div className="relative flex-shrink-0">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${colorMap[notif.type]}`}>
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${colorMap[notif.type] || colorMap.system}`}>
                     <Icon className="w-5 h-5" />
                   </div>
-                  {notif.unread && (
+                  {!notif.is_read && (
                     <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full border-2 border-card" />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2 mb-1">
                     <h3 className="font-semibold text-sm">{notif.title}</h3>
-                    <Tag variant="muted" className="text-xs flex-shrink-0">{typeLabels[notif.type]}</Tag>
+                    <Tag variant="muted" className="text-xs flex-shrink-0">{notif.type.split("_")[0]}</Tag>
                   </div>
-                  <p className="text-sm text-muted-foreground mb-1">{notif.message}</p>
-                  <p className="text-xs text-muted-foreground">{notif.time}</p>
+                  <p className="text-sm text-muted-foreground mb-1">{notif.body}</p>
+                  <p className="text-xs text-muted-foreground">{timeAgo(notif.created_at)}</p>
                 </div>
               </div>
             </Card>

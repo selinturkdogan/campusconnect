@@ -2,17 +2,33 @@ import { Bell, Search, GraduationCap, LogOut } from "lucide-react";
 import { Link } from "react-router";
 import { Avatar } from "./Avatar";
 import { useAuth } from "../context/AuthContext";
+import { useEffect, useState } from "react";
+import { apiFetch } from "../lib/api";
 
 export function Navbar() {
   const { user, logout } = useAuth();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (!user) return;
+    fetchUnreadCount();
+    const interval = setInterval(fetchUnreadCount, 30000);
+    return () => clearInterval(interval);
+  }, [user]);
+
+  async function fetchUnreadCount() {
+    try {
+      const data = await apiFetch("/api/notifications/unread-count");
+      setUnreadCount(data.count);
+    } catch {
+      // silent fail
+    }
+  }
 
   return (
     <header className="fixed top-0 left-0 right-0 h-16 bg-card border-b border-border z-50 flex items-center px-6 gap-4">
-      <Link
-        to="/"
-        className="flex items-center gap-2 font-bold text-xl text-primary mr-6"
-      >
-        <GraduationCap className="w-7 h-7" />
+      <Link to="/" className="flex items-center gap-2 font-bold text-xl text-primary mr-6">
+        <img src="/logo.png" alt="CampusConnect" className="w-7 h-7 object-contain" />
         CampusConnect
       </Link>
 
@@ -32,12 +48,13 @@ export function Navbar() {
           </span>
         )}
 
-        <Link
-          to="/notifications"
-          className="relative p-2 rounded-lg hover:bg-muted transition-colors"
-        >
+        <Link to="/notifications" className="relative p-2 rounded-lg hover:bg-muted transition-colors">
           <Bell className="w-5 h-5" />
-          <span className="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full" />
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-white text-xs rounded-full flex items-center justify-center font-bold">
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </span>
+          )}
         </Link>
 
         <Link to="/profile">

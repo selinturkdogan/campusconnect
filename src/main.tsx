@@ -9,10 +9,3 @@ createRoot(document.getElementById("root")!).render(
     <RouterProvider router={router} />
   </AuthProvider>
 );
-```
-
-Kaydedip:
-```
-git add src/main.tsx
-git commit -m "fix: resolve main.tsx conflict"
-git push origin main

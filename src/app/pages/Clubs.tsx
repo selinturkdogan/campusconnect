@@ -94,9 +94,11 @@ export function Clubs() {
   }
 
   const filtered = clubs.filter((c) => {
-    const matchSearch = c.name.toLowerCase().includes(search.toLowerCase()) ||
+    const matchSearch =
+      c.name.toLowerCase().includes(search.toLowerCase()) ||
       c.description.toLowerCase().includes(search.toLowerCase());
-    const matchCategory = activeCategory === "All" || c.category === activeCategory;
+    const matchCategory =
+      activeCategory === "All" || c.category === activeCategory;
     return matchSearch && matchCategory;
   });
 
@@ -113,12 +115,16 @@ export function Clubs() {
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-bold mb-2">Student Clubs</h1>
-          <p className="text-muted-foreground">Discover and join clubs that match your interests</p>
+          <p className="text-muted-foreground">
+            Discover and join clubs that match your interests
+          </p>
         </div>
-        <Button onClick={() => setShowCreateModal(true)}>
-          <Plus className="w-4 h-4" />
-          Create Club
-        </Button>
+        {user?.role === "admin" && (
+          <Button onClick={() => setShowCreateModal(true)}>
+            <Plus className="w-4 h-4" />
+            Create Club
+          </Button>
+        )}
       </div>
 
       <div className="flex flex-col md:flex-row gap-4">
@@ -155,26 +161,37 @@ export function Clubs() {
           {filtered.map((club) => (
             <Card key={club.id} className="p-6 hover:shadow-md transition-shadow">
               <div className="flex items-start gap-4 mb-4">
-                <div className={`w-16 h-16 bg-gradient-to-br ${CLUB_COLORS[club.category] || CLUB_COLORS.default} rounded-xl flex items-center justify-center text-white text-2xl font-bold flex-shrink-0`}>
+                <div
+                  className={`w-16 h-16 bg-gradient-to-br ${CLUB_COLORS[club.category] || CLUB_COLORS.default} rounded-xl flex items-center justify-center text-white text-2xl font-bold flex-shrink-0`}
+                >
                   {club.name[0]}
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-bold text-lg mb-1 truncate">{club.name}</h3>
-                  <Tag variant="muted" className="text-xs">{club.category}</Tag>
+                  <Tag variant="muted" className="text-xs">
+                    {club.category}
+                  </Tag>
                 </div>
               </div>
 
-              <p className="text-muted-foreground text-sm mb-4 line-clamp-2">{club.description}</p>
+              <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
+                {club.description}
+              </p>
 
               <div className="mb-4">
-                <Tag variant={club.is_open ? "primary" : "secondary"} className="text-xs">
+                <Tag
+                  variant={club.is_open ? "primary" : "secondary"}
+                  className="text-xs"
+                >
                   {club.is_open ? "Open" : "Approval Required"}
                 </Tag>
               </div>
 
               <div className="flex gap-2">
                 <Link to={`/clubs/${club.id}`} className="flex-1">
-                  <Button variant="outline" className="w-full">View Club</Button>
+                  <Button variant="outline" className="w-full">
+                    View Club
+                  </Button>
                 </Link>
                 {club.admin_user_id !== user?.user_id && (
                   <Button
@@ -182,7 +199,11 @@ export function Clubs() {
                     onClick={() => handleJoin(club.id)}
                     disabled={joiningId === club.id}
                   >
-                    {joiningId === club.id ? <Loader2 className="w-4 h-4 animate-spin" /> : "Join"}
+                    {joiningId === club.id ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      "Join"
+                    )}
                   </Button>
                 )}
               </div>
@@ -191,45 +212,65 @@ export function Clubs() {
         </div>
       )}
 
-      {showCreateModal && (
+      {user?.role === "admin" && showCreateModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-card rounded-xl border border-border p-6 w-full max-w-lg">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold">Create a New Club</h2>
-              <button onClick={() => setShowCreateModal(false)} className="text-muted-foreground hover:text-foreground">
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="text-muted-foreground hover:text-foreground"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-1.5">Club Name</label>
+                <label className="block text-sm font-medium mb-1.5">
+                  Club Name
+                </label>
                 <input
                   value={createForm.name}
-                  onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
+                  onChange={(e) =>
+                    setCreateForm({ ...createForm, name: e.target.value })
+                  }
                   placeholder="Club name"
                   className="w-full px-3 py-2.5 text-sm bg-muted border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1.5">Description</label>
+                <label className="block text-sm font-medium mb-1.5">
+                  Description
+                </label>
                 <textarea
                   value={createForm.description}
-                  onChange={(e) => setCreateForm({ ...createForm, description: e.target.value })}
+                  onChange={(e) =>
+                    setCreateForm({
+                      ...createForm,
+                      description: e.target.value,
+                    })
+                  }
                   placeholder="What is this club about?"
                   rows={3}
                   className="w-full px-3 py-2.5 text-sm bg-muted border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-none"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1.5">Category</label>
+                <label className="block text-sm font-medium mb-1.5">
+                  Category
+                </label>
                 <select
                   value={createForm.category}
-                  onChange={(e) => setCreateForm({ ...createForm, category: e.target.value })}
+                  onChange={(e) =>
+                    setCreateForm({ ...createForm, category: e.target.value })
+                  }
                   className="w-full px-3 py-2.5 text-sm bg-muted border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                   {CATEGORIES.filter((c) => c !== "All").map((cat) => (
-                    <option key={cat} value={cat}>{cat}</option>
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -238,21 +279,36 @@ export function Clubs() {
                   type="checkbox"
                   id="is_open"
                   checked={createForm.is_open}
-                  onChange={(e) => setCreateForm({ ...createForm, is_open: e.target.checked })}
+                  onChange={(e) =>
+                    setCreateForm({ ...createForm, is_open: e.target.checked })
+                  }
                   className="w-4 h-4"
                 />
-                <label htmlFor="is_open" className="text-sm">Open membership (anyone can join instantly)</label>
+                <label htmlFor="is_open" className="text-sm">
+                  Open membership (anyone can join instantly)
+                </label>
               </div>
             </div>
 
             <div className="flex gap-3 mt-6">
               <Button
                 onClick={handleCreate}
-                disabled={isSubmitting || !createForm.name || !createForm.description}
+                disabled={
+                  isSubmitting || !createForm.name || !createForm.description
+                }
               >
-                {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Create Club"}
+                {isSubmitting ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  "Create Club"
+                )}
               </Button>
-              <Button variant="outline" onClick={() => setShowCreateModal(false)}>Cancel</Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowCreateModal(false)}
+              >
+                Cancel
+              </Button>
             </div>
           </div>
         </div>

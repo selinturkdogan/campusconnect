@@ -25,6 +25,9 @@ def get_club(club_id: str, current_user: dict = Depends(get_current_user)):
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
 def create_club(body: ClubCreate, current_user: dict = Depends(get_current_user)):
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Only admins can create clubs")
+
     supabase = get_supabase()
     result = supabase.table("clubs").insert({
         "name": body.name,

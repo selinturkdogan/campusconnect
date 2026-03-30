@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import auth, projects, notifications, clubs, events
+from app.routers import auth, projects, notifications, clubs, events, study_groups
 from app.core.config import settings
 
 app = FastAPI(
@@ -22,6 +22,7 @@ app.include_router(projects.router, prefix="/api/projects", tags=["Projects"])
 app.include_router(notifications.router, prefix="/api/notifications", tags=["Notifications"])
 app.include_router(clubs.router, prefix="/api/clubs", tags=["Clubs"])
 app.include_router(events.router, prefix="/api/events", tags=["Events"])
+app.include_router(study_groups.router, prefix="/api/study-groups", tags=["Study Groups"])
 
 
 @app.get("/")

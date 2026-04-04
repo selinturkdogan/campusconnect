@@ -10,7 +10,7 @@ class LoginRequest(BaseModel):
 class LoginResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
-    role: str           # "admin" | "student"
+    role: str
     user_id: str
     name: str
     email: str
@@ -30,3 +30,15 @@ class UserPublic(BaseModel):
     bio: Optional[str] = None
     skills: Optional[list] = []
     courses: Optional[list] = []
+
+
+class UserUpdate(BaseModel):
+    name: Optional[str] = None
+    university: Optional[str] = None
+    department: Optional[str] = None
+    year: Optional[int] = None
+    github_url: Optional[str] = None
+    linkedin_url: Optional[str] = None
+    bio: Optional[str] = None
+    skills: Optional[list] = None
+    courses: Optional[list] = None

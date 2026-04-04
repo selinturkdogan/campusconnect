@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, status, Depends
-from app.schemas.auth import LoginRequest, LoginResponse, UserPublic
+from app.schemas.auth import LoginRequest, LoginResponse, UserPublic, UserUpdate
 from app.core.supabase import get_supabase
 from app.core.security import create_access_token, get_current_user
 
@@ -10,7 +10,6 @@ router = APIRouter()
 def login(body: LoginRequest):
     supabase = get_supabase()
 
-    # 🔐 AUTH LOGIN
     try:
         auth_response = supabase.auth.sign_in_with_password(
             {"email": body.email, "password": body.password}
@@ -30,7 +29,6 @@ def login(body: LoginRequest):
 
     supabase_user_id = auth_response.user.id
 
-    # 📦 USERS TABLOSU
     try:
         result = (
             supabase.table("users")
@@ -41,12 +39,8 @@ def login(body: LoginRequest):
         )
     except Exception as e:
         print("DB ERROR:", e)
-        raise HTTPException(
-            status_code=500,
-            detail="Database error",
-        )
+        raise HTTPException(status_code=500, detail="Database error")
 
-    # 🚨 BURASI KRİTİK FIX
     if not result or not result.data:
         raise HTTPException(
             status_code=404,
@@ -55,7 +49,6 @@ def login(body: LoginRequest):
 
     user = result.data
 
-    # 🎟 JWT
     token = create_access_token(
         data={
             "sub": user["id"],
@@ -76,6 +69,21 @@ def login(body: LoginRequest):
 @router.get("/me", response_model=UserPublic)
 def get_me(current_user: dict = Depends(get_current_user)):
     return current_user
+
+
+@router.put("/profile")
+def update_profile(body: UserUpdate, current_user: dict = Depends(get_current_user)):
+    supabase = get_supabase()
+    update_data = {k: v for k, v in body.model_dump().items() if v is not None}
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No fields to update")
+    result = (
+        supabase.table("users")
+        .update(update_data)
+        .eq("id", current_user["id"])
+        .execute()
+    )
+    return result.data[0]
 
 
 @router.post("/logout")

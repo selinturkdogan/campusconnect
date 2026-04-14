@@ -2,43 +2,43 @@
 
 :root {
   --font-size: 16px;
-  --background: #fafafa;
-  --foreground: #1e293b;
+  --background: #f0f7ff;
+  --foreground: #1a3a8f;
   --card: #ffffff;
-  --card-foreground: #1e293b;
+  --card-foreground: #1a3a8f;
   --popover: #ffffff;
-  --popover-foreground: #1e293b;
-  --primary: #dc2626;
+  --popover-foreground: #1a3a8f;
+  --primary: #2176c7;
   --primary-foreground: #ffffff;
-  --secondary: #ef4444;
+  --secondary: #1aad82;
   --secondary-foreground: #ffffff;
-  --muted: #f1f5f9;
-  --muted-foreground: #64748b;
-  --accent: #fef2f2;
-  --accent-foreground: #1e293b;
+  --muted: #e0f0fb;
+  --muted-foreground: #4a7aaa;
+  --accent: #d6eef0;
+  --accent-foreground: #1a3a8f;
   --destructive: #991b1b;
   --destructive-foreground: #ffffff;
-  --border: #e2e8f0;
-  --input: #e2e8f0;
-  --input-background: #ffffff;
-  --switch-background: #cbd5e1;
+  --border: #cce0f5;
+  --input: #cce0f5;
+  --input-background: #f0f8ff;
+  --switch-background: #a0c8e8;
   --font-weight-medium: 500;
   --font-weight-normal: 400;
-  --ring: #dc2626;
-  --chart-1: #dc2626;
-  --chart-2: #ef4444;
-  --chart-3: #f87171;
-  --chart-4: #fca5a5;
-  --chart-5: #fecaca;
+  --ring: #2176c7;
+  --chart-1: #1a3a8f;
+  --chart-2: #2176c7;
+  --chart-3: #1aad82;
+  --chart-4: #5dcaa5;
+  --chart-5: #9fe1cb;
   --radius: 0.75rem;
   --sidebar: #ffffff;
-  --sidebar-foreground: #1e293b;
-  --sidebar-primary: #dc2626;
+  --sidebar-foreground: #1a3a8f;
+  --sidebar-primary: #2176c7;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #fef2f2;
-  --sidebar-accent-foreground: #1e293b;
-  --sidebar-border: #e2e8f0;
-  --sidebar-ring: #dc2626;
+  --sidebar-accent: #d6eef0;
+  --sidebar-accent-foreground: #1a3a8f;
+  --sidebar-border: #cce0f5;
+  --sidebar-ring: #2176c7;
 }
 
 .dark {
@@ -127,11 +127,6 @@
   body {
     @apply bg-background text-foreground;
   }
-
-  /**
-  * Default typography styles for HTML elements (h1-h4, p, label, button, input).
-  * These are in @layer base, so Tailwind utility classes (like text-sm, text-lg) automatically override them.
-  */
 
   html {
     font-size: var(--font-size);

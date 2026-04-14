@@ -126,25 +126,15 @@ export function Login() {
             src="/logo.png"
             alt="CampusConnect"
             style={{
-              width: "420px",
-              maxWidth: "85%",
+              width: "450px",
+              maxWidth: "100%",
               height: "auto",
               objectFit: "contain",
               marginBottom: "24px",
               mixBlendMode: "multiply",
             }}
           />
-          <p
-            style={{
-              color: "#2a5a8a",
-              fontSize: "16px",
-              lineHeight: "1.7",
-              maxWidth: "320px",
-              fontWeight: 500,
-            }}
-          >
-            One platform for all your university needs — clubs, events, and academic resources.
-          </p>
+
         </div>
       </div>
 

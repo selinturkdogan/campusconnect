@@ -13,14 +13,14 @@ router = APIRouter()
 
 @router.get("/")
 def list_projects(current_user: dict = Depends(get_current_user)):
-    supabase = get_supabase()
+    supabase = get_supabase_admin()
     result = supabase.table("project_posts").select("*").order("created_at", desc=True).execute()
     return result.data
 
 
 @router.get("/{project_id}")
 def get_project(project_id: str, current_user: dict = Depends(get_current_user)):
-    supabase = get_supabase()
+    supabase = get_supabase_admin()
     result = supabase.table("project_posts").select("*").eq("id", project_id).single().execute()
     if not result.data:
         raise HTTPException(status_code=404, detail="Project not found")
@@ -29,7 +29,7 @@ def get_project(project_id: str, current_user: dict = Depends(get_current_user))
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
 def create_project(body: ProjectPostCreate, current_user: dict = Depends(get_current_user)):
-    supabase = get_supabase()
+    supabase = get_supabase_admin()
     result = supabase.table("project_posts").insert({
         "title": body.title,
         "description": body.description,
@@ -44,7 +44,7 @@ def create_project(body: ProjectPostCreate, current_user: dict = Depends(get_cur
 
 @router.put("/{project_id}")
 def update_project(project_id: str, body: ProjectPostUpdate, current_user: dict = Depends(get_current_user)):
-    supabase = get_supabase()
+    supabase = get_supabase_admin()
     existing = supabase.table("project_posts").select("owner_id").eq("id", project_id).single().execute()
     if not existing.data:
         raise HTTPException(status_code=404, detail="Project not found")
@@ -58,7 +58,7 @@ def update_project(project_id: str, body: ProjectPostUpdate, current_user: dict 
 
 @router.delete("/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_project(project_id: str, current_user: dict = Depends(get_current_user)):
-    supabase = get_supabase()
+    supabase = get_supabase_admin()
     existing = supabase.table("project_posts").select("owner_id").eq("id", project_id).single().execute()
     if not existing.data:
         raise HTTPException(status_code=404, detail="Project not found")
@@ -69,7 +69,7 @@ def delete_project(project_id: str, current_user: dict = Depends(get_current_use
 
 @router.post("/{project_id}/apply", status_code=status.HTTP_201_CREATED)
 def apply_to_project(project_id: str, body: ApplicationCreate, current_user: dict = Depends(get_current_user)):
-    supabase = get_supabase()
+    supabase = get_supabase_admin()
 
     project = supabase.table("project_posts").select("*").eq("id", project_id).single().execute()
     if not project.data:
@@ -100,7 +100,7 @@ def apply_to_project(project_id: str, body: ApplicationCreate, current_user: dic
 
 @router.get("/{project_id}/applications")
 def get_applications(project_id: str, current_user: dict = Depends(get_current_user)):
-    supabase = get_supabase()
+    supabase = get_supabase_admin()
     project = supabase.table("project_posts").select("owner_id").eq("id", project_id).single().execute()
     if not project.data:
         raise HTTPException(status_code=404, detail="Project not found")
@@ -121,7 +121,7 @@ def update_application_status(
     if body.status not in ("accepted", "rejected"):
         raise HTTPException(status_code=400, detail="Status must be accepted or rejected")
 
-    supabase = get_supabase()
+    supabase = get_supabase_admin()
     project = supabase.table("project_posts").select("owner_id, title").eq("id", project_id).single().execute()
     if not project.data:
         raise HTTPException(status_code=404, detail="Project not found")
@@ -147,13 +147,13 @@ def update_application_status(
 
 @router.get("/my/posts")
 def my_posts(current_user: dict = Depends(get_current_user)):
-    supabase = get_supabase()
+    supabase = get_supabase_admin()
     result = supabase.table("project_posts").select("*").eq("owner_id", current_user["id"]).order("created_at", desc=True).execute()
     return result.data
 
 
 @router.get("/my/applications")
 def my_applications(current_user: dict = Depends(get_current_user)):
-    supabase = get_supabase()
+    supabase = get_supabase_admin()
     result = supabase.table("project_applications").select("*").eq("applicant_id", current_user["id"]).order("applied_at", desc=True).execute()
     return result.data

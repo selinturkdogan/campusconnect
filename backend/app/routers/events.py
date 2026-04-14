@@ -9,27 +9,53 @@ router = APIRouter()
 
 @router.get("/")
 def list_events(current_user: dict = Depends(get_current_user)):
-    supabase = get_supabase()
+    supabase = get_supabase_admin()
     result = supabase.table("events").select("*").order("event_date").execute()
+    events = result.data or []
+
+    # Attach attendee counts
+    for event in events:
+        try:
+            count_result = supabase.table("event_attendees").select("id", count="exact").eq("event_id", event["id"]).execute()
+            event["attendee_count"] = count_result.count or 0
+        except Exception:
+            event["attendee_count"] = 0
+
+    return events
+
+
+@router.get("/my-attending")
+def my_attending(current_user: dict = Depends(get_current_user)):
+    """Returns event_ids the current user is attending."""
+    supabase = get_supabase_admin()
+    result = supabase.table("event_attendees").select("event_id").eq("user_id", current_user["id"]).execute()
     return result.data
 
 
 @router.get("/{event_id}")
 def get_event(event_id: str, current_user: dict = Depends(get_current_user)):
-    supabase = get_supabase()
+    supabase = get_supabase_admin()
     result = supabase.table("events").select("*").eq("id", event_id).single().execute()
     if not result.data:
         raise HTTPException(status_code=404, detail="Event not found")
-    return result.data
+    event = result.data
+    try:
+        count_result = supabase.table("event_attendees").select("id", count="exact").eq("event_id", event_id).execute()
+        event["attendee_count"] = count_result.count or 0
+    except Exception:
+        event["attendee_count"] = 0
+    return event
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
 def create_event(body: EventCreate, current_user: dict = Depends(get_current_user)):
-    supabase = get_supabase()
+    supabase = get_supabase_admin()
 
+    # School-wide events: admin only
     if body.is_school_wide and current_user["role"] != "admin":
         raise HTTPException(status_code=403, detail="Only admins can create school-wide events")
 
+    # Club events: club admin or platform admin only
     if body.club_id:
         club = supabase.table("clubs").select("admin_user_id, name").eq("id", body.club_id).single().execute()
         if not club.data:
@@ -50,10 +76,10 @@ def create_event(body: EventCreate, current_user: dict = Depends(get_current_use
 
     event = result.data[0]
 
+    # Notify all students for school-wide events
     if body.is_school_wide:
-        supabase_admin = get_supabase_admin()
-        users = supabase_admin.table("users").select("id").eq("role", "student").execute()
-        for user in users.data:
+        users = supabase.table("users").select("id").eq("role", "student").execute()
+        for user in (users.data or []):
             send_notification(
                 user_id=user["id"],
                 type="new_school_event",
@@ -62,12 +88,25 @@ def create_event(body: EventCreate, current_user: dict = Depends(get_current_use
                 link=f"/events/{event['id']}",
             )
 
+    # Notify club members for club events (new_club_event)
+    if body.club_id:
+        members = supabase.table("club_memberships").select("user_id").eq("club_id", body.club_id).eq("status", "approved").execute()
+        for member in (members.data or []):
+            if member["user_id"] != current_user["id"]:
+                send_notification(
+                    user_id=member["user_id"],
+                    type="new_club_event",
+                    title=f"New event: {body.title}",
+                    body=f"Your club has a new event on {body.event_date.strftime('%b %d')} at {body.location}.",
+                    link=f"/events/{event['id']}",
+                )
+
     return event
 
 
 @router.put("/{event_id}")
 def update_event(event_id: str, body: EventUpdate, current_user: dict = Depends(get_current_user)):
-    supabase = get_supabase()
+    supabase = get_supabase_admin()
     event = supabase.table("events").select("created_by").eq("id", event_id).single().execute()
     if not event.data:
         raise HTTPException(status_code=404, detail="Event not found")
@@ -84,7 +123,7 @@ def update_event(event_id: str, body: EventUpdate, current_user: dict = Depends(
 
 @router.delete("/{event_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_event(event_id: str, current_user: dict = Depends(get_current_user)):
-    supabase = get_supabase()
+    supabase = get_supabase_admin()
     event = supabase.table("events").select("created_by").eq("id", event_id).single().execute()
     if not event.data:
         raise HTTPException(status_code=404, detail="Event not found")
@@ -95,10 +134,14 @@ def delete_event(event_id: str, current_user: dict = Depends(get_current_user)):
 
 @router.post("/{event_id}/attend", status_code=status.HTTP_201_CREATED)
 def attend_event(event_id: str, current_user: dict = Depends(get_current_user)):
-    supabase = get_supabase()
+    supabase = get_supabase_admin()
     event = supabase.table("events").select("*").eq("id", event_id).single().execute()
     if not event.data:
         raise HTTPException(status_code=404, detail="Event not found")
+
+    existing = supabase.table("event_attendees").select("id").eq("event_id", event_id).eq("user_id", current_user["id"]).execute()
+    if existing.data:
+        raise HTTPException(status_code=400, detail="Already attending")
 
     result = supabase.table("event_attendees").insert({
         "event_id": event_id,
@@ -109,12 +152,12 @@ def attend_event(event_id: str, current_user: dict = Depends(get_current_user)):
 
 @router.delete("/{event_id}/attend", status_code=status.HTTP_204_NO_CONTENT)
 def cancel_attendance(event_id: str, current_user: dict = Depends(get_current_user)):
-    supabase = get_supabase()
+    supabase = get_supabase_admin()
     supabase.table("event_attendees").delete().eq("event_id", event_id).eq("user_id", current_user["id"]).execute()
 
 
 @router.get("/{event_id}/attendees")
 def get_attendees(event_id: str, current_user: dict = Depends(get_current_user)):
-    supabase = get_supabase()
+    supabase = get_supabase_admin()
     result = supabase.table("event_attendees").select("*").eq("event_id", event_id).execute()
     return result.data

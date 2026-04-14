@@ -4,7 +4,7 @@ from jose import JWTError, jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.core.config import settings
-from app.core.supabase import get_supabase
+from app.core.supabase import get_supabase, get_supabase_admin
 
 security = HTTPBearer()
 
@@ -44,7 +44,7 @@ async def get_current_user(
             detail="Invalid token payload",
         )
 
-    supabase = get_supabase()
+    supabase = get_supabase_admin()
     result = supabase.table("users").select("*").eq("id", user_id).single().execute()
 
     if not result.data:

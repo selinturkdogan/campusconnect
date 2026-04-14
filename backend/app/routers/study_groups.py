@@ -10,14 +10,14 @@ router = APIRouter()
 
 @router.get("/")
 def list_groups(current_user: dict = Depends(get_current_user)):
-    supabase = get_supabase()
+    supabase = get_supabase_admin()
     result = supabase.table("study_groups").select("*").eq("is_active", True).order("created_at", desc=True).execute()
     return result.data
 
 
 @router.get("/{group_id}")
 def get_group(group_id: str, current_user: dict = Depends(get_current_user)):
-    supabase = get_supabase()
+    supabase = get_supabase_admin()
     result = supabase.table("study_groups").select("*").eq("id", group_id).single().execute()
     if not result.data:
         raise HTTPException(status_code=404, detail="Study group not found")
@@ -26,7 +26,7 @@ def get_group(group_id: str, current_user: dict = Depends(get_current_user)):
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
 def create_group(body: StudyGroupCreate, current_user: dict = Depends(get_current_user)):
-    supabase = get_supabase()
+    supabase = get_supabase_admin()
     result = supabase.table("study_groups").insert({
         "course_name": body.course_name,
         "course_code": body.course_code,
@@ -48,7 +48,7 @@ def create_group(body: StudyGroupCreate, current_user: dict = Depends(get_curren
 
 @router.put("/{group_id}")
 def update_group(group_id: str, body: StudyGroupUpdate, current_user: dict = Depends(get_current_user)):
-    supabase = get_supabase()
+    supabase = get_supabase_admin()
     group = supabase.table("study_groups").select("creator_id").eq("id", group_id).single().execute()
     if not group.data:
         raise HTTPException(status_code=404, detail="Study group not found")
@@ -62,7 +62,7 @@ def update_group(group_id: str, body: StudyGroupUpdate, current_user: dict = Dep
 
 @router.delete("/{group_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_group(group_id: str, current_user: dict = Depends(get_current_user)):
-    supabase = get_supabase()
+    supabase = get_supabase_admin()
     group = supabase.table("study_groups").select("creator_id").eq("id", group_id).single().execute()
     if not group.data:
         raise HTTPException(status_code=404, detail="Study group not found")
@@ -73,7 +73,7 @@ def delete_group(group_id: str, current_user: dict = Depends(get_current_user)):
 
 @router.post("/{group_id}/join", status_code=status.HTTP_201_CREATED)
 def join_group(group_id: str, current_user: dict = Depends(get_current_user)):
-    supabase = get_supabase()
+    supabase = get_supabase_admin()
     group = supabase.table("study_groups").select("*").eq("id", group_id).single().execute()
     if not group.data:
         raise HTTPException(status_code=404, detail="Study group not found")
@@ -87,20 +87,20 @@ def join_group(group_id: str, current_user: dict = Depends(get_current_user)):
 
 @router.delete("/{group_id}/leave", status_code=status.HTTP_204_NO_CONTENT)
 def leave_group(group_id: str, current_user: dict = Depends(get_current_user)):
-    supabase = get_supabase()
+    supabase = get_supabase_admin()
     supabase.table("study_group_members").delete().eq("group_id", group_id).eq("user_id", current_user["id"]).execute()
 
 
 @router.get("/{group_id}/members")
 def get_members(group_id: str, current_user: dict = Depends(get_current_user)):
-    supabase = get_supabase()
+    supabase = get_supabase_admin()
     result = supabase.table("study_group_members").select("*").eq("group_id", group_id).execute()
     return result.data
 
 
 @router.get("/{group_id}/messages")
 def get_messages(group_id: str, current_user: dict = Depends(get_current_user)):
-    supabase = get_supabase()
+    supabase = get_supabase_admin()
     result = (
         supabase.table("study_messages")
         .select("*")
@@ -117,7 +117,7 @@ def send_message(group_id: str, body: MessageCreate, current_user: dict = Depend
     if not body.content and not body.file_url:
         raise HTTPException(status_code=400, detail="Message must have content or file")
 
-    supabase = get_supabase()
+    supabase = get_supabase_admin()
     result = supabase.table("study_messages").insert({
         "group_id": group_id,
         "sender_id": current_user["id"],

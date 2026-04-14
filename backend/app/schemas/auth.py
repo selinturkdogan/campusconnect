@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr
-from typing import Optional
+from typing import Optional, List
 
 
 class LoginRequest(BaseModel):
@@ -42,3 +42,10 @@ class UserUpdate(BaseModel):
     bio: Optional[str] = None
     skills: Optional[list] = None
     courses: Optional[list] = None
+
+
+class AIAnalysisResponse(BaseModel):
+    missing_fields: List[str] = []
+    tips: List[str] = []
+    club_suggestions: List[str] = []
+    event_suggestions: List[str] = []

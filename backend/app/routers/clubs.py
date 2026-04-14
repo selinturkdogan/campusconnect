@@ -14,14 +14,14 @@ class RoleUpdate(BaseModel):
 
 @router.get("/")
 def list_clubs(current_user: dict = Depends(get_current_user)):
-    supabase = get_supabase()
+    supabase = get_supabase_admin()
     result = supabase.table("clubs").select("*").order("created_at", desc=True).execute()
     return result.data
 
 
 @router.get("/{club_id}")
 def get_club(club_id: str, current_user: dict = Depends(get_current_user)):
-    supabase = get_supabase()
+    supabase = get_supabase_admin()
     result = supabase.table("clubs").select("*").eq("id", club_id).single().execute()
     if not result.data:
         raise HTTPException(status_code=404, detail="Club not found")
@@ -33,7 +33,7 @@ def create_club(body: ClubCreate, current_user: dict = Depends(get_current_user)
     if current_user["role"] != "admin":
         raise HTTPException(status_code=403, detail="Only admins can create clubs")
 
-    supabase = get_supabase()
+    supabase = get_supabase_admin()
     result = supabase.table("clubs").insert({
         "name": body.name,
         "description": body.description,
@@ -56,7 +56,7 @@ def create_club(body: ClubCreate, current_user: dict = Depends(get_current_user)
 
 @router.put("/{club_id}")
 def update_club(club_id: str, body: ClubUpdate, current_user: dict = Depends(get_current_user)):
-    supabase = get_supabase()
+    supabase = get_supabase_admin()
     club = supabase.table("clubs").select("admin_user_id").eq("id", club_id).single().execute()
     if not club.data:
         raise HTTPException(status_code=404, detail="Club not found")
@@ -70,7 +70,7 @@ def update_club(club_id: str, body: ClubUpdate, current_user: dict = Depends(get
 
 @router.delete("/{club_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_club(club_id: str, current_user: dict = Depends(get_current_user)):
-    supabase = get_supabase()
+    supabase = get_supabase_admin()
     club = supabase.table("clubs").select("admin_user_id").eq("id", club_id).single().execute()
     if not club.data:
         raise HTTPException(status_code=404, detail="Club not found")
@@ -81,7 +81,7 @@ def delete_club(club_id: str, current_user: dict = Depends(get_current_user)):
 
 @router.post("/{club_id}/join", status_code=status.HTTP_201_CREATED)
 def join_club(club_id: str, current_user: dict = Depends(get_current_user)):
-    supabase = get_supabase()
+    supabase = get_supabase_admin()
     club = supabase.table("clubs").select("*").eq("id", club_id).single().execute()
     if not club.data:
         raise HTTPException(status_code=404, detail="Club not found")
@@ -113,13 +113,13 @@ def join_club(club_id: str, current_user: dict = Depends(get_current_user)):
 
 @router.delete("/{club_id}/leave", status_code=status.HTTP_204_NO_CONTENT)
 def leave_club(club_id: str, current_user: dict = Depends(get_current_user)):
-    supabase = get_supabase()
+    supabase = get_supabase_admin()
     supabase.table("club_memberships").delete().eq("club_id", club_id).eq("user_id", current_user["id"]).execute()
 
 
 @router.get("/{club_id}/members")
 def get_members(club_id: str, current_user: dict = Depends(get_current_user)):
-    supabase = get_supabase()
+    supabase = get_supabase_admin()
     result = supabase.table("club_memberships").select("*").eq("club_id", club_id).execute()
     return result.data
 
@@ -134,7 +134,7 @@ def update_member_status(
     if body.status not in ("approved", "rejected"):
         raise HTTPException(status_code=400, detail="Status must be approved or rejected")
 
-    supabase = get_supabase()
+    supabase = get_supabase_admin()
     club = supabase.table("clubs").select("name, admin_user_id").eq("id", club_id).single().execute()
     if not club.data:
         raise HTTPException(status_code=404, detail="Club not found")
@@ -156,7 +156,7 @@ def update_member_status(
 
 @router.delete("/{club_id}/members/{user_id}/remove", status_code=status.HTTP_204_NO_CONTENT)
 def remove_member(club_id: str, user_id: str, current_user: dict = Depends(get_current_user)):
-    supabase = get_supabase()
+    supabase = get_supabase_admin()
     club = supabase.table("clubs").select("admin_user_id, name").eq("id", club_id).single().execute()
     if not club.data:
         raise HTTPException(status_code=404, detail="Club not found")
@@ -184,7 +184,7 @@ def update_member_role(
     if body.role not in ("member", "admin", "president"):
         raise HTTPException(status_code=400, detail="Role must be member, admin or president")
 
-    supabase = get_supabase()
+    supabase = get_supabase_admin()
     club = supabase.table("clubs").select("admin_user_id").eq("id", club_id).single().execute()
     if not club.data:
         raise HTTPException(status_code=404, detail="Club not found")
@@ -201,7 +201,7 @@ async def upload_club_video(
     file: UploadFile = File(...),
     current_user: dict = Depends(get_current_user)
 ):
-    supabase = get_supabase()
+    supabase = get_supabase_admin()
     club = supabase.table("clubs").select("admin_user_id").eq("id", club_id).single().execute()
     if not club.data:
         raise HTTPException(status_code=404, detail="Club not found")
@@ -231,7 +231,7 @@ async def upload_club_video(
 
 @router.delete("/{club_id}/delete-video", status_code=status.HTTP_204_NO_CONTENT)
 def delete_club_video(club_id: str, current_user: dict = Depends(get_current_user)):
-    supabase = get_supabase()
+    supabase = get_supabase_admin()
     club = supabase.table("clubs").select("admin_user_id").eq("id", club_id).single().execute()
     if not club.data:
         raise HTTPException(status_code=404, detail="Club not found")
